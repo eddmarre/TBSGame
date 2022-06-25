@@ -5,13 +5,21 @@ using UnityEngine;
 
 public class Unit : MonoBehaviour
 {
+    [SerializeField] private Animator _unitAnimator;
+
+    private GridPosition _gridPosition;
     private Vector3 _targetPosition;
     float stoppingDistance = .1f;
-    [SerializeField] private Animator _unitAnimator;
 
     private void Awake()
     {
         _targetPosition = transform.position;
+    }
+
+    private void Start()
+    {
+        _gridPosition = LevelGrid.Instance.GetGridPosition(transform.position);
+        LevelGrid.Instance.AddUnitAtGridPosition(_gridPosition, this);
     }
 
     private void Update()
@@ -31,6 +39,14 @@ public class Unit : MonoBehaviour
         else
         {
             _unitAnimator.SetBool("isRunning", false);
+        }
+
+        GridPosition newGridPosition = LevelGrid.Instance.GetGridPosition(transform.position);
+
+        if (newGridPosition != _gridPosition)
+        {
+            LevelGrid.Instance.UnitMOvedGridPosition(this, _gridPosition, newGridPosition);
+            _gridPosition = newGridPosition;
         }
     }
 
