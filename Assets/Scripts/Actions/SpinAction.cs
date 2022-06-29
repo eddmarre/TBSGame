@@ -16,8 +16,7 @@ public class SpinAction : BaseAction
         totalSpinAmount += spinAddAmount;
         if (totalSpinAmount > 360f)
         {
-            _isActive = false;
-            _onActionComplete();
+            ActionComplete();
         }
     }
 
@@ -30,9 +29,8 @@ public class SpinAction : BaseAction
 
     public override void TakeAction(GridPosition gridPosition, Action onActionComplete)
     {
-        _onActionComplete = onActionComplete;
-        _isActive = true;
         totalSpinAmount = 0f;
+        ActionStart(onActionComplete);
     }
 
     public override string GetActionName()
@@ -42,6 +40,15 @@ public class SpinAction : BaseAction
 
     public override int GetActionPointsCost()
     {
-        return 2;
+        return 1;
+    }
+
+    public override EnemyAIAction GetEnemyAIAction(GridPosition _gridPosition)
+    {
+        return new EnemyAIAction
+        {
+            gridPosition = _gridPosition,
+            actionValue = 0
+        };
     }
 }

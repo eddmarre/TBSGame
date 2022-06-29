@@ -5,9 +5,12 @@ using UnityEngine;
 
 public class MoveAction : BaseAction
 {
-    [SerializeField] private Animator _unitAnimator;
+    public event EventHandler onStartMoving;
+    public event EventHandler onStopMoving;
+
+
     [SerializeField] private int maxMovementDistance = 4;
-    
+
     private Vector3 _targetPosition;
     float stoppingDistance = .1f;
 
@@ -26,26 +29,23 @@ public class MoveAction : BaseAction
     {
         if (!_isActive) return;
         Vector3 moveDirection = (_targetPosition - transform.position).normalized;
-        
+
         if (Vector3.Distance(_targetPosition, transform.position) > stoppingDistance)
         {
             float moveSpeed = 5f;
             transform.position += moveDirection * moveSpeed * Time.deltaTime;
-
-            _unitAnimator.SetBool("isRunning", true);
         }
         else
         {
-            _unitAnimator.SetBool("isRunning", false);
-            _isActive = false;
-            _onActionComplete();
+            onStopMoving?.Invoke(this, EventArgs.Empty);
+            ActionComplete();
         }
 
         //change direction over time instead of instant
         float rotateSpeed = 5f;
         transform.forward = Vector3.Lerp(transform.forward, moveDirection, Time.deltaTime * rotateSpeed);
     }
-    
+
     public override List<GridPosition> GetValidActionGridPositionList()
     {
         List<GridPosition> validGridPositionList = new List<GridPosition>();
@@ -84,8 +84,18 @@ public class MoveAction : BaseAction
 
     public override void TakeAction(GridPosition gridPosition, Action onActionComplete)
     {
-        _onActionComplete = onActionComplete;
         _targetPosition = LevelGrid.Instance.GetWorldPosition(gridPosition);
-        _isActive = true;
+        onStartMoving?.Invoke(this, EventArgs.Empty);
+        ActionStart(onActionComplete);
+    }
+
+    public override EnemyAIAction GetEnemyAIAction(GridPosition _gridPosition)
+    {
+        int targetCountAtPosition = _unit.GetShootAction().GetTargetCountAtPosition(_gridPosition);
+        return new EnemyAIAction
+        {
+            gridPosition = _gridPosition,
+            actionValue = targetCountAtPosition * 10
+        };
     }
 }

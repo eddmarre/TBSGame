@@ -5,7 +5,10 @@ using UnityEngine;
 
 public class TurnSystem : MonoBehaviour
 {
+
     private int _turnNumber=1;
+
+    private bool _isPlayerTurn = true;
 
     public static TurnSystem Instance { get; private set; }
 
@@ -26,6 +29,7 @@ public class TurnSystem : MonoBehaviour
     public void NextTurn()
     {
         _turnNumber++;
+        _isPlayerTurn = !_isPlayerTurn;
         
         onTurnChanged?.Invoke(this,EventArgs.Empty);
     }
@@ -34,4 +38,11 @@ public class TurnSystem : MonoBehaviour
     {
         return _turnNumber;
     }
+
+    public bool IsPlayerTurn()
+    {
+        return _isPlayerTurn;
+    }
+
+
 }

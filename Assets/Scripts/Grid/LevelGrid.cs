@@ -11,7 +11,7 @@ public class LevelGrid : MonoBehaviour
 
     private GridSystem _gridSystem;
 
-
+    public event EventHandler onAnyUnitMovedGridPosition;
     private void Awake()
     {
         if (Instance != null)
@@ -51,6 +51,8 @@ public class LevelGrid : MonoBehaviour
         RemoveUnitAtGridPosition(fromPosition, unit);
 
         AddUnitAtGridPosition(toGridPosition, unit);
+        
+        onAnyUnitMovedGridPosition?.Invoke(this,EventArgs.Empty);
     }
 
     public GridPosition GetGridPosition(Vector3 worldPosition) => _gridSystem.GetGridPosition(worldPosition);
@@ -63,5 +65,11 @@ public class LevelGrid : MonoBehaviour
     {
         GridObject gridObject = _gridSystem.GetGridObject(gridPosition);
         return gridObject.HasAnyUnit();
+    }
+
+    public Unit GetUnitAtAGridPosition(GridPosition gridPosition)
+    {
+        GridObject gridObject = _gridSystem.GetGridObject(gridPosition);
+        return gridObject.GetUnit();
     }
 }
