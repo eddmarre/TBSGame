@@ -91,7 +91,7 @@ public class MoveAction : BaseAction
 
     public override EnemyAIAction GetEnemyAIAction(GridPosition _gridPosition)
     {
-        int targetCountAtPosition = _unit.GetShootAction().GetTargetCountAtPosition(_gridPosition);
+        int targetCountAtPosition = _unit.GetAction<ShootAction>().GetTargetCountAtPosition(_gridPosition);
         return new EnemyAIAction
         {
             gridPosition = _gridPosition,
