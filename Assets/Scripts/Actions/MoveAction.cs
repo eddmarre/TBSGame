@@ -11,14 +11,9 @@ public class MoveAction : BaseAction
 
     [SerializeField] private int maxMovementDistance = 4;
 
-    private Vector3 _targetPosition;
+    private List<Vector3> _targetPositions;
+    private int currentPositionIndex;
     float stoppingDistance = .1f;
-
-    protected override void Awake()
-    {
-        base.Awake();
-        _targetPosition = transform.position;
-    }
 
     public override string GetActionName()
     {
@@ -28,17 +23,22 @@ public class MoveAction : BaseAction
     private void Update()
     {
         if (!_isActive) return;
-        Vector3 moveDirection = (_targetPosition - transform.position).normalized;
+        Vector3 targetPosition = _targetPositions[currentPositionIndex];
+        Vector3 moveDirection = (targetPosition - transform.position).normalized;
 
-        if (Vector3.Distance(_targetPosition, transform.position) > stoppingDistance)
+        if (Vector3.Distance(targetPosition, transform.position) > stoppingDistance)
         {
             float moveSpeed = 5f;
             transform.position += moveDirection * moveSpeed * Time.deltaTime;
         }
         else
         {
-            onStopMoving?.Invoke(this, EventArgs.Empty);
-            ActionComplete();
+            currentPositionIndex++;
+            if (currentPositionIndex >= _targetPositions.Count)
+            {
+                onStopMoving?.Invoke(this, EventArgs.Empty);
+                ActionComplete();
+            }
         }
 
         //change direction over time instead of instant
@@ -75,6 +75,24 @@ public class MoveAction : BaseAction
                     continue;
                 }
 
+                if (!Pathfinding.Instance.IsWalkableGridPosition(testGridPosition))
+                {
+                    continue;
+                }
+
+                if (!Pathfinding.Instance.HasPath(unitGridPostion, testGridPosition))
+                {
+                    continue;
+                }
+
+                int pathFindingDistanceMultiplier = 10;
+                if (Pathfinding.Instance.GetPathLength(unitGridPostion, testGridPosition) >
+                    maxMovementDistance * pathFindingDistanceMultiplier)
+                {
+                    //path length is too long
+                    continue;
+                }
+
                 validGridPositionList.Add(testGridPosition);
             }
         }
@@ -84,7 +102,16 @@ public class MoveAction : BaseAction
 
     public override void TakeAction(GridPosition gridPosition, Action onActionComplete)
     {
-        _targetPosition = LevelGrid.Instance.GetWorldPosition(gridPosition);
+        List<GridPosition> pathGridPositions =
+            Pathfinding.Instance.FindPath(_unit.GetGridPosition(), gridPosition, out int pathLength);
+
+        currentPositionIndex = 0;
+        _targetPositions = new List<Vector3>();
+        foreach (GridPosition position in pathGridPositions)
+        {
+            _targetPositions.Add(LevelGrid.Instance.GetWorldPosition(position));
+        }
+
         onStartMoving?.Invoke(this, EventArgs.Empty);
         ActionStart(onActionComplete);
     }

@@ -8,10 +8,13 @@ public class LevelGrid : MonoBehaviour
     public static LevelGrid Instance { get; private set; }
 
     [SerializeField] private Transform girdDebugObjectPrefab;
-
+    [SerializeField] private int width;
+    [SerializeField] private int height;
+    [SerializeField] private float cellSize;
     private GridSystem<GridObject> _gridSystem;
 
     public event EventHandler onAnyUnitMovedGridPosition;
+
     private void Awake()
     {
         if (Instance != null)
@@ -23,11 +26,16 @@ public class LevelGrid : MonoBehaviour
 
         Instance = this;
 
-        _gridSystem = new GridSystem<GridObject>(10, 10, 2f, (GridSystem<GridObject> gridSystem, GridPosition gridPosition)=>
-            new GridObject(gridSystem,gridPosition));
-        _gridSystem.CreateDebugOBjects(girdDebugObjectPrefab);
+        _gridSystem = new GridSystem<GridObject>(width, height, cellSize,
+            (GridSystem<GridObject> gridSystem, GridPosition gridPosition) =>
+                new GridObject(gridSystem, gridPosition));
+        //_gridSystem.CreateDebugOBjects(girdDebugObjectPrefab);
     }
 
+    private void Start()
+    {
+        Pathfinding.Instance.SetUp(width, height, cellSize);
+    }
 
     public void AddUnitAtGridPosition(GridPosition gridPosition, Unit unit)
     {
@@ -52,8 +60,8 @@ public class LevelGrid : MonoBehaviour
         RemoveUnitAtGridPosition(fromPosition, unit);
 
         AddUnitAtGridPosition(toGridPosition, unit);
-        
-        onAnyUnitMovedGridPosition?.Invoke(this,EventArgs.Empty);
+
+        onAnyUnitMovedGridPosition?.Invoke(this, EventArgs.Empty);
     }
 
     public GridPosition GetGridPosition(Vector3 worldPosition) => _gridSystem.GetGridPosition(worldPosition);
